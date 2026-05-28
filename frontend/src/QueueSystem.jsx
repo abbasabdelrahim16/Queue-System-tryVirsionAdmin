@@ -2,21 +2,20 @@ import { useState, useEffect, useCallback } from "react";
 
 // ─── Design tokens ──────────────────────────────────────────────
 const COLORS = {
-  bg: "#0B0F1A",
-  surface: "#131929",
-  card: "#1A2236",
-  border: "#1E2D45",
-  accent: "#3B82F6",
-  accentDim: "#1D4ED8",
-  gold: "#F59E0B",
-  green: "#10B981",
-  red: "#EF4444",
-  orange: "#F97316",
-  text: "#F1F5F9",
-  muted: "#64748B",
-  subtle: "#94A3B8",
-};
-
+  bg:       "#F8F9FC",
+  surface:  "#FFFFFF",
+  card:     "#FFFFFF",
+  border:   "#E5E7EB",
+  accent:   "#EF4444",
+  accentDim:"#B91C1C",
+  gold:     "#F59E0B",
+  green:    "#10B981",
+  red:      "#EF4444",
+  orange:   "#F97316",
+  text:     "#111827",
+  muted:    "#6B7280",
+  subtle:   "#9CA3AF",
+}
 const STATUS_CONFIG = {
   waiting:     { color: COLORS.gold,   bg: "#2A1F00", label: "Waiting"     },
   in_progress: { color: COLORS.accent, bg: "#0D1B35", label: "In Progress" },
@@ -261,12 +260,9 @@ function Toast({ msg, type = "success", onClose }) {
 function OperatorDashboard() {
   const [queue,        setQueue]        = useState(null);
   const [tickets,      setTickets]      = useState([]);
-  const [services,     setServices]     = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [acting,       setActing]       = useState(false);
   const [toast,        setToast]        = useState(null);
-  const [walkInOpen,   setWalkInOpen]   = useState(false);
-  const [walkInForm,   setWalkInForm]   = useState({ name: "", phone: "", service_id: "1" });
   const [filterStatus, setFilterStatus] = useState("all");
 
   const showToast = (msg, type = "success") => setToast({ msg, type });
@@ -281,11 +277,6 @@ function OperatorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  // Load services for walk-in modal
-  useEffect(() => {
-    api.getServices().then(setServices);
   }, []);
 
   useEffect(() => { load(); }, []);
@@ -317,16 +308,6 @@ function OperatorDashboard() {
     else await api.resumeQueue();
     await load();
     showToast(queue?.status === "active" ? "Queue paused" : "Queue resumed");
-  };
-
-  const addWalkIn = async () => {
-    if (!walkInForm.name || !walkInForm.phone) return showToast("Name and phone required", "error");
-    const res = await api.bookTicket({ ...walkInForm, queue_id: 1 });
-    if (res.error) { showToast(res.error, "error"); return; }
-    showToast(`Walk-in added — Ticket #${res.ticket_number}`, "success");
-    setWalkInOpen(false);
-    setWalkInForm({ name: "", phone: "", service_id: "1" });
-    await load();
   };
 
   const waiting       = tickets.filter(t => t.status === "waiting").length;
@@ -380,8 +361,6 @@ function OperatorDashboard() {
         <Btn variant={queue?.status === "active" ? "warning" : "success"} onClick={toggleQueue}>
           {queue?.status === "active" ? "⏸ Pause Queue" : "▶ Resume Queue"}
         </Btn>
-        <Btn variant="ghost" onClick={() => setWalkInOpen(true)}>+ Walk-in</Btn>
-        <Btn variant="ghost" onClick={load} style={{ marginLeft: "auto" }}>↻ Refresh</Btn>
       </div>
 
       {/* Filter tabs */}
@@ -429,32 +408,6 @@ function OperatorDashboard() {
         ))}
       </div>
 
-      {/* Walk-in modal */}
-      {walkInOpen && (
-        <div style={{
-          position: "fixed", inset: 0, background: "#00000088", zIndex: 100,
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }} onClick={e => e.target === e.currentTarget && setWalkInOpen(false)}>
-          <Card style={{ width: 380, background: COLORS.surface }}>
-            <h3 style={{ color: COLORS.text, margin: "0 0 20px", fontSize: 18 }}>Add Walk-in Customer</h3>
-            <Input label="Customer Name" placeholder="Full name"
-              value={walkInForm.name} onChange={e => setWalkInForm(f => ({ ...f, name: e.target.value }))} />
-            <Input label="Phone Number" placeholder="+213…"
-              value={walkInForm.phone} onChange={e => setWalkInForm(f => ({ ...f, phone: e.target.value }))} />
-            <Select label="Service" value={walkInForm.service_id}
-              onChange={e => setWalkInForm(f => ({ ...f, service_id: e.target.value }))}>
-              {services.map(s => (
-                <option key={s.id} value={s.id}>{s.name} (~{s.estimated_time} min)</option>
-              ))}
-            </Select>
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <Btn variant="ghost" onClick={() => setWalkInOpen(false)}>Cancel</Btn>
-              <Btn onClick={addWalkIn}>Add to Queue</Btn>
-            </div>
-          </Card>
-        </div>
-      )}
-
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
@@ -474,9 +427,7 @@ function CustomerBooking() {
 
   const showToast = (msg, type = "success") => setToast({ msg, type });
 
-  useEffect(() => {
-    api.getServices().then(setServices);
-  }, []);
+  useEffect(() => { api.getServices().then(setServices); }, []);
 
   const book = async () => {
     if (!form.name || !form.phone) return showToast("Name and phone are required", "error");
@@ -678,7 +629,7 @@ function LiveDisplay() {
 
   return (
     <div style={{
-      background: "#060C18", minHeight: 420, borderRadius: 12,
+      background: "#f8dddd", minHeight: 420, borderRadius: 12,
       border: `1px solid ${COLORS.border}`, overflow: "hidden",
     }}>
       <div style={{
@@ -697,7 +648,7 @@ function LiveDisplay() {
         <div style={{
           padding: 32, borderRight: `1px solid ${COLORS.border}`,
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          background: "#070E1C",
+          background: "#feecec",
         }}>
           <div style={{ fontSize: 11, letterSpacing: "0.15em", color: COLORS.muted, marginBottom: 16, fontWeight: 600 }}>
             NOW SERVING
@@ -894,11 +845,6 @@ function AdminDashboard() {
           }}
         />
 
-        <button onClick={load} style={{
-          background: "transparent", border: `1px solid ${COLORS.border}`,
-          borderRadius: 8, padding: "7px 14px", color: COLORS.subtle,
-          fontSize: 13, cursor: "pointer",
-        }}>↻ Refresh</button>
       </div>
 
       {/* Table */}
@@ -1285,8 +1231,6 @@ function AdminTicketHistory() {
         <input placeholder="Search ticket, customer, service…" value={search} onChange={e=>setSearch(e.target.value)}
           style={{flex:1,minWidth:180,background:COLORS.surface,border:`1px solid ${COLORS.border}`,
             borderRadius:8,padding:"7px 12px",color:COLORS.text,fontSize:13,outline:"none"}} />
-        <button onClick={load} style={{background:"transparent",border:`1px solid ${COLORS.border}`,
-          borderRadius:8,padding:"7px 12px",color:COLORS.subtle,fontSize:13,cursor:"pointer"}}>↻</button>
       </div>
 
       {/* Table */}
@@ -1378,8 +1322,6 @@ function AdminCustomers() {
         <input placeholder="Search by name or phone…" value={search} onChange={e=>setSearch(e.target.value)}
           style={{flex:1,background:COLORS.surface,border:`1px solid ${COLORS.border}`,borderRadius:8,
             padding:"8px 12px",color:COLORS.text,fontSize:13,outline:"none"}} />
-        <button onClick={load} style={{background:"transparent",border:`1px solid ${COLORS.border}`,
-          borderRadius:8,padding:"8px 12px",color:COLORS.subtle,fontSize:13,cursor:"pointer"}}>↻ Refresh</button>
       </div>
 
       {loading ? <div style={{textAlign:"center",color:COLORS.muted,padding:60}}>Loading…</div> : (
@@ -1647,8 +1589,8 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        input::placeholder { color: #475569; }
-        select option { background: #131929; }
+        input::placeholder { color: #694747; }
+        select option { background: #d6dff7; }
         @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.7 } }
         @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0B0F1A; }

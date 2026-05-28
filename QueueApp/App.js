@@ -49,18 +49,19 @@ const socket = io(BASE_URL, {
 
 /* ─── Design tokens ──────────────────────────────────────────────── */
 const C = {
-  bg:      "#0B0F1A",
-  surface: "#131929",
-  card:    "#1A2236",
-  border:  "#1E2D45",
-  accent:  "#3B82F6",
-  accentL: "#60A5FA",
-  gold:    "#F59E0B",
-  green:   "#10B981",
-  red:     "#EF4444",
-  text:    "#F1F5F9",
-  muted:   "#64748B",
-  subtle:  "#94A3B8",
+ bg:       "#F8F9FC",
+  surface:  "#FFFFFF",
+  card:     "#FFFFFF",
+  border:   "#E5E7EB",
+  accent:   "#EF4444",
+  accentDim:"#B91C1C",
+  gold:     "#F59E0B",
+  green:    "#10B981",
+  red:      "#EF4444",
+  orange:   "#F97316",
+  text:     "#111827",
+  muted:    "#6B7280",
+  subtle:   "#9CA3AF",
 };
 
 const STATUS_CFG = {
